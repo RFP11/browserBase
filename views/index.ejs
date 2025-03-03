@@ -28,12 +28,6 @@
       background-color: rgba(0, 0, 0, 0.4);
       visibility: hidden;
     }
-
-    /* Style for the dashed border highlight */
-    .highlight {
-      outline: 3px dashed rgba(0, 123, 255, 0.7); /* Dashed blue border */
-      background-color: rgba(0, 123, 255, 0.2);  /* Light blue background */
-    }
   </style>
 </head>
 
@@ -49,6 +43,12 @@
       <input type="text" name="url" class="px-2 flex-1">
       <button type="submit" class="bg-cyan-600 active:bg-cyan-700 text-white py-1 px-6">GO</button>
       <button id="terminate" type="button" class="bg-red-600 active:bg-red-700 text-white py-1 px-6">TERMINATE</button>
+
+      <div class="fixed mt-20 bg-gray-500 top-5 right-5 w-[30%] bg-gradient-workflow bg-custom-bg rounded-lg z-50 px-3 py-6 flex flex-col">
+        <h1 class="text-cyan-50 mb-2 text-center">Selecting element to click</h1>
+        <!-- Hidden input for storing class names -->
+        <input type="hidden" class="p-1.5 border rounded-md bg-white" value="" />
+      </div>
     </form>
 
     <iframe id="content" sandbox="allow-same-origin allow-scripts" class="aspect-video h-full border-x-4 border-b-4 border-cyan-600 rounded-b-lg relative z-[1]"></iframe>
@@ -164,18 +164,6 @@
       const iframeWindow = htmlFrame.contentWindow;
       const iframeDoc = htmlFrame.contentDocument || iframeWindow?.document;
 
-      const originalFetch = iframeWindow.fetch;
-      iframeWindow.fetch = async function (input, init) {
-        let requestUrl = typeof input === 'string' ? input : input.url;
-        if (!/^https?:\/\//i.test(requestUrl)) {
-          const baseUrl = new URL(htmlFrame.src);
-          const absoluteUrl = new URL(requestUrl, baseUrl).href;
-          requestUrl = absoluteUrl;
-        }
-        const res = await originalFetch(requestUrl, init);
-        return res;
-      };
-
       const clickableElements = ['a', 'button', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'input', 'span'];
       clickableElements.forEach(tag => {
         iframeDoc.querySelectorAll(tag).forEach(element => {
@@ -189,12 +177,26 @@
 
     function highlightElement(element) {
       console.log('Element clicked:', element);
-
       document.querySelectorAll('.highlight').forEach(item => item.classList.remove('highlight'));
       element.classList.add('highlight');
+      const clickedClassName = element.className;
+      const hiddenInput = document.querySelector('input[type="hidden"]');
 
-      console.log('Highlighted element class name:', element.className);
+      if (hiddenInput) {
+        hiddenInput.type = 'text';        hiddenInput.value = `${clickedClassName}`;
+
+        console.log('Input value set to:', hiddenInput.value);
+      }
     }
+
+    htmlFrame.onload = function () {
+      const iframeWindow = htmlFrame.contentWindow;
+      const iframeDoc = htmlFrame.contentDocument || iframeWindow?.document;
+
+      iframeDoc.body.addEventListener('click', function (event) {
+        highlightElement(event.target);
+      });
+    };
   </script>
 </body>
 
