@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Google in WebRTC</title>
+</head>
+<body>
+    <h2>Interactive Google Streaming</h2>
+    <button onclick="startChrome()">Start Chrome</button>
+    <button onclick="closeChrome()">Close Chrome</button>
+
+    <video id="video" autoplay width="1200" height="800" style="border: 2px solid black;"></video>
+
+    <script>
+        let socket;
+
+        function startChrome() {
+            fetch("http://localhost:3000/start-chrome")
+                .then(() => {
+                    socket = new WebSocket("ws://localhost:3000");
+
+                    socket.onmessage = (event) => {
+                        const video = document.getElementById("video");
+                        const blob = new Blob([event.data], { type: "video/webm" });
+                        video.src = URL.createObjectURL(blob);
+                    };
+
+                    socket.onopen = () => {
+                        console.log("Connected to WebRTC stream");
+
+                        // Capture mouse clicks and send to server
+                        document.getElementById("video").addEventListener("click", (e) => {
+                            const rect = e.target.getBoundingClientRect();
+                            socket.send(JSON.stringify({
+                                type: "click",
+                                x: e.clientX - rect.left,
+                                y: e.clientY - rect.top
+                            }));
+                        });
+
+                        // Capture keyboard events and send to server
+                        document.addEventListener("keydown", (e) => {
+                            socket.send(JSON.stringify({ type: "keydown", key: e.key }));
+                        });
+
+                        document.addEventListener("keyup", (e) => {
+                            socket.send(JSON.stringify({ type: "keyup", key: e.key }));
+                        });
+                    };
+
+                    socket.onclose = () => console.log("Disconnected from WebRTC stream");
+                })
+                .catch((error) => console.error("Error starting Chrome:", error));
+        }
+
+        function closeChrome() {
+            fetch("http://localhost:3000/close-chrome").then(() => {
+                if (socket) socket.close();
+                document.getElementById("video").src = "";
+            });
+        }
+    </script>
+</body>
+</html>
