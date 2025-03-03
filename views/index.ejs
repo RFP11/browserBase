@@ -38,13 +38,17 @@
     </div>
 
     <form id="form" class="flex gap-2">
-      <button id="back" type="button" class="bg-gray-500 active:bg-gray-600 disabled:bg-gray-600 text-white py-1 px-3"><x-heroicon-o-arrow-left class="w-6 h-6" /></button>
-      <button id="refresh" type="button" class="bg-gray-500 active:bg-gray-600 disabled:bg-gray-600 text-white py-1 px-3"><x-heroicon-o-arrow-path class="w-6 h-6" /></button>
-      <input type="text" name="url" class="px-2 flex-1">
+      <!-- <button id="back" type="button" class="bg-gray-500 active:bg-gray-600 disabled:bg-gray-600 text-white py-1 px-3">
+        <svg clip-rule="evenodd" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m9.474 5.209s-4.501 4.505-6.254 6.259c-.147.146-.22.338-.22.53s.073.384.22.53c1.752 1.754 6.252 6.257 6.252 6.257.145.145.336.217.527.217.191-.001.383-.074.53-.221.293-.293.294-.766.004-1.057l-4.976-4.976h14.692c.414 0 .75-.336.75-.75s-.336-.75-.75-.75h-14.692l4.978-4.979c.289-.289.287-.761-.006-1.054-.147-.147-.339-.221-.53-.221-.191-.001-.38.071-.525.215z" fill-rule="nonzero"/></svg>
+      </button> -->
+      <button id="refresh" type="button" class="bg-gray-500 active:bg-gray-600 disabled:bg-gray-600 text-white py-1 px-3">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M13.5 2c-5.621 0-10.211 4.443-10.475 10h-3.025l5 6.625 5-6.625h-2.975c.257-3.351 3.06-6 6.475-6 3.584 0 6.5 2.916 6.5 6.5s-2.916 6.5-6.5 6.5c-1.863 0-3.542-.793-4.728-2.053l-2.427 3.216c1.877 1.754 4.389 2.837 7.155 2.837 5.79 0 10.5-4.71 10.5-10.5s-4.71-10.5-10.5-10.5z"/></svg>
+      </button>
+      <input type="text" name="url" class="px-2 flex-1 bg-white">
       <button type="submit" class="bg-cyan-600 active:bg-cyan-700 text-white py-1 px-6">GO</button>
       <button id="terminate" type="button" class="bg-red-600 active:bg-red-700 text-white py-1 px-6">TERMINATE</button>
 
-      <div class="fixed mt-20 bg-gray-500 top-5 right-5 w-[42%] bg-gradient-workflow bg-custom-bg rounded-lg z-50 px-3 py-6 flex flex-col">
+      <div id="selectorSection" class="fixed mt-20 bg-gray-500 top-5 right-5 w-[36%] bg-gradient-workflow bg-custom-bg rounded-lg z-50 px-3 py-6 flex flex-col hidden">
         <h1 class="text-cyan-50 mb-2 text-center">Selecting element to click</h1>
         <!-- Hidden input for storing class names -->
         <input id="selectorElement" type="text" class="p-1.5 border rounded-md bg-white" value="" />
@@ -53,7 +57,7 @@
 
     <iframe id="content" sandbox="allow-same-origin allow-scripts" class="aspect-video h-full border-x-4 border-b-4 border-cyan-600 rounded-b-lg relative z-[1]"></iframe>
   </div>
-  <div id="history" class="h-[85vh] w-[35vh] flex flex-col justify-end items-end gap-2 border-cyan-600 border m-auto relative"></div>
+  <div id="history" class="h-auto w-full flex flex-col justify-end items-end gap-2 border-cyan-600 border m-auto relative"></div>
 
   <script type="module">
     import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
@@ -73,6 +77,7 @@
     const back = document.getElementById('back');
     const refresh = document.getElementById('refresh');
     const loadingOverlay = document.getElementById('browser-loading-overlay');
+    const selectorSection = document.getElementById('selectorSection');
 
     toastr.options.timeOut = 5000;
 
@@ -107,6 +112,8 @@
         toastr.warning("The url must be a valid URL");
         return;
       }
+
+      selectorSection.classList.remove('hidden');
 
       setLoading(true);
       socket.emit("req-html", { url });
