@@ -44,10 +44,10 @@
       <button type="submit" class="bg-cyan-600 active:bg-cyan-700 text-white py-1 px-6">GO</button>
       <button id="terminate" type="button" class="bg-red-600 active:bg-red-700 text-white py-1 px-6">TERMINATE</button>
 
-      <div class="fixed mt-20 bg-gray-500 top-5 right-5 w-[30%] bg-gradient-workflow bg-custom-bg rounded-lg z-50 px-3 py-6 flex flex-col">
+      <div class="fixed mt-20 bg-gray-500 top-5 right-5 w-[42%] bg-gradient-workflow bg-custom-bg rounded-lg z-50 px-3 py-6 flex flex-col">
         <h1 class="text-cyan-50 mb-2 text-center">Selecting element to click</h1>
         <!-- Hidden input for storing class names -->
-        <input type="hidden" class="p-1.5 border rounded-md bg-white" value="" />
+        <input id="selectorElement" type="text" class="p-1.5 border rounded-md bg-white" value="" />
       </div>
     </form>
 
@@ -75,29 +75,6 @@
     const loadingOverlay = document.getElementById('browser-loading-overlay');
 
     toastr.options.timeOut = 5000;
-
-    document.addEventListener("DOMContentLoaded", function () {
-    const params = new URLSearchParams(window.location.search);
-    const urlParam = params.get("url"); // Get the `url` query parameter
-    console.log("URL parameter:", urlParam);
-    if (urlParam) {
-      // Validate the URL
-      const urlRegex =
-        /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/;
-  
-      if (!urlParam.match(urlRegex)) {
-        console.error("Invalid URL in parameter");
-      } else {
-        // Update input field
-        urlInput.value = urlParam;
-        urlInput.disabled = true;
-        setLoading(true);
-        socket.emit("req-html", {
-        url: urlParam
-      });
-      }
-    }
-  });
 
     socket.on("res-html", (res) => {
       setLoading(false);
@@ -187,7 +164,7 @@
       const iframeWindow = htmlFrame.contentWindow;
       const iframeDoc = htmlFrame.contentDocument || iframeWindow?.document;
 
-      const clickableElements = ['a', 'button', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'input', 'span'];
+      const clickableElements = ['a', 'b', 'button', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'input', 'span'];
       clickableElements.forEach(tag => {
         iframeDoc.querySelectorAll(tag).forEach(element => {
           element.addEventListener('click', function (event) {
@@ -199,17 +176,11 @@
     }
 
     function highlightElement(element) {
-      console.log('Element clicked:', element);
-      document.querySelectorAll('.highlight').forEach(item => item.classList.remove('highlight'));
-      element.classList.add('highlight');
       const clickedClassName = element.className;
-      const hiddenInput = document.querySelector('input[type="hidden"]');
+      console.log(clickedClassName)
+      const textInput = document.getElementById('selectorElement');
 
-      if (hiddenInput) {
-        hiddenInput.type = 'text';        hiddenInput.value = `${clickedClassName}`;
-
-        console.log('Input value set to:', hiddenInput.value);
-      }
+      textInput.value = `${clickedClassName}`;
     }
 
     htmlFrame.onload = function () {
