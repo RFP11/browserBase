@@ -4,9 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <title>Laravel Browser Sim</title>
-
   <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css" rel="stylesheet">
   <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
@@ -30,6 +28,12 @@
       background-color: rgba(0, 0, 0, 0.4);
       visibility: hidden;
     }
+
+    /* Style for the dashed border highlight */
+    .highlight {
+      outline: 3px dashed rgba(0, 123, 255, 0.7); /* Dashed blue border */
+      background-color: rgba(0, 123, 255, 0.2);  /* Light blue background */
+    }
   </style>
 </head>
 
@@ -40,36 +44,26 @@
     </div>
 
     <form id="form" class="flex gap-2">
-      <button id="back" type="button"
-        class="bg-gray-500 active:bg-gray-600 disabled:bg-gray-600 text-white py-1 px-3"><x-heroicon-o-arrow-left
-          class="w-6 h-6" /></button>
-      <button id="refresh" type="button"
-        class="bg-gray-500 active:bg-gray-600 disabled:bg-gray-600 text-white py-1 px-3"><x-heroicon-o-arrow-path
-          class="w-6 h-6" /></button>
+      <button id="back" type="button" class="bg-gray-500 active:bg-gray-600 disabled:bg-gray-600 text-white py-1 px-3"><x-heroicon-o-arrow-left class="w-6 h-6" /></button>
+      <button id="refresh" type="button" class="bg-gray-500 active:bg-gray-600 disabled:bg-gray-600 text-white py-1 px-3"><x-heroicon-o-arrow-path class="w-6 h-6" /></button>
       <input type="text" name="url" class="px-2 flex-1">
       <button type="submit" class="bg-cyan-600 active:bg-cyan-700 text-white py-1 px-6">GO</button>
       <button id="terminate" type="button" class="bg-red-600 active:bg-red-700 text-white py-1 px-6">TERMINATE</button>
     </form>
 
-    <iframe id="content" sandbox="allow-same-origin allow-scripts"
-      class="aspect-video h-full border-x-4 border-b-4 border-cyan-600 rounded-b-lg relative z-[1]"></iframe>
+    <iframe id="content" sandbox="allow-same-origin allow-scripts" class="aspect-video h-full border-x-4 border-b-4 border-cyan-600 rounded-b-lg relative z-[1]"></iframe>
   </div>
-  <div id="history"
-    class="h-[85vh] w-[35vh] flex flex-col justify-end items-end gap-2 border-cyan-600 border m-auto relative">
-  </div>
+  <div id="history" class="h-[85vh] w-[35vh] flex flex-col justify-end items-end gap-2 border-cyan-600 border m-auto relative"></div>
 
   <script type="module">
-    import {
-      io
-    } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
+    import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
+
     const histories = []
     const socket = io("http://localhost:3000", {
-      auth:{
-        apiKey: '16|JOfgrDMFNnsVhy4C0aDxpj3cjP4kXbe5MnmcVSbSe3b57679'
+      auth: {
+        apiKey: '1|ekx1KXvkGy6uGYTmii5v6oabgb40mtmk4lDPXlIa4c2e119f'
       }
     });
-
-    window.socket = socket;
 
     const htmlFrame = document.getElementById('content');
     const form = document.getElementById('form');
@@ -79,6 +73,7 @@
     const back = document.getElementById('back');
     const refresh = document.getElementById('refresh');
     const loadingOverlay = document.getElementById('browser-loading-overlay');
+
     toastr.options.timeOut = 5000;
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -106,13 +101,11 @@
 
     socket.on("res-html", (res) => {
       setLoading(false);
-
       const html = res.html;
       const url = res.url;
       htmlFrame.srcdoc = html
       htmlFrame.src = url
       urlInput.value = url
-
       handleActions()
       console.log(res)
     })
@@ -127,12 +120,11 @@
       toastr.error(res.message);
     })
 
-    form?.addEventListener('submit', function(e) {
+    form?.addEventListener('submit', function (e) {
       e.preventDefault();
       const url = urlInput.value;
 
-      const urlRegex =
-        /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/;
+      const urlRegex = /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/;
 
       if (!url.match(urlRegex)) {
         toastr.warning("The url must be a valid URL");
@@ -140,12 +132,10 @@
       }
 
       setLoading(true);
-      socket.emit("req-html", {
-        url
-      });
+      socket.emit("req-html", { url });
     });
 
-    terminate?.addEventListener('click', function(e) {
+    terminate?.addEventListener('click', function (e) {
       setLoading(false);
       htmlFrame.srcdoc = ""
       urlInput.value = ""
@@ -154,46 +144,28 @@
       });
     })
 
-    back?.addEventListener('click', function(e) {
-      //   if (htmlFrame.srcdoc) {
+    back?.addEventListener('click', function (e) {
       setLoading(true)
-
-      socket.emit("req-page", {
-        action: 'back'
-      }, (res) => {
+      socket.emit("req-page", { action: 'back' }, (res) => {
         if (res.success) {
-          histories.push({
-            "action": "back",
-            "selector": res.url
-          })
-          history.innerHTML +=
-            `<div class="bg-white rounded-full px-8 py-2 text-sm">Navigate back to <b>${res.url.slice(0, 30)}</b>...</div>`
+          histories.push({ "action": "back", "selector": res.url })
+          history.innerHTML += `<div class="bg-white rounded-full px-8 py-2 text-sm">Navigate back to <b>${res.url.slice(0, 30)}</b>...</div>`
         } else {
           setLoading(false)
         }
       });
-      //   }
     })
 
-    refresh?.addEventListener('click', function(e) {
-      //   if (htmlFrame.srcdoc) {
+    refresh?.addEventListener('click', function (e) {
       setLoading(true)
-
-      socket.emit("req-page", {
-        action: 'refresh'
-      }, (res) => {
+      socket.emit("req-page", { action: 'refresh' }, (res) => {
         if (res.success) {
-          histories.push({
-            "action": "refresh",
-            "selector": res.url
-          })
-          history.innerHTML +=
-            `<div class="bg-white rounded-full px-8 py-2 text-sm">Refreshing page <b>${res.url.slice(0, 30)}</b>...</div>`
+          histories.push({ "action": "refresh", "selector": res.url })
+          history.innerHTML += `<div class="bg-white rounded-full px-8 py-2 text-sm">Refreshing page <b>${res.url.slice(0, 30)}</b>...</div>`
         } else {
           setLoading(false)
         }
       });
-      //   }
     })
 
     function setLoading(state) {
@@ -202,7 +174,7 @@
     }
 
     function handleActions() {
-      htmlFrame.onload = function() {
+      htmlFrame.onload = function () {
         manipulateAction()
       };
 
@@ -211,184 +183,40 @@
       }
     }
 
-    const debounce = (callback, wait) => {
-      let timeoutId = null;
-      return (...args) => {
-        window.clearTimeout(timeoutId);
-        timeoutId = window.setTimeout(() => {
-          callback(...args);
-        }, wait);
-      };
-    }
-
     function manipulateAction() {
       const iframeWindow = htmlFrame.contentWindow;
       const iframeDoc = htmlFrame.contentDocument || iframeWindow?.document;
 
       const originalFetch = iframeWindow.fetch;
-      iframeWindow.fetch = async function(input, init) {
+      iframeWindow.fetch = async function (input, init) {
         let requestUrl = typeof input === 'string' ? input : input.url;
-
         if (!/^https?:\/\//i.test(requestUrl)) {
           const baseUrl = new URL(htmlFrame.src);
           const absoluteUrl = new URL(requestUrl, baseUrl).href;
           requestUrl = absoluteUrl;
         }
-
         const res = await originalFetch(requestUrl, init);
-
         return res;
       };
 
-      // links
-      iframeDoc.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', function(event) {
-          event.preventDefault();
-          const selector = generateXPath(link);
-
-          setLoading(true);
-          socket.emit("req-click", {
-            selector
+      const clickableElements = ['a', 'button', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'input', 'span'];
+      clickableElements.forEach(tag => {
+        iframeDoc.querySelectorAll(tag).forEach(element => {
+          element.addEventListener('click', function (event) {
+            event.preventDefault();
+            highlightElement(element);
           });
-          histories.push({
-            "action": "navigate",
-            "selector": link.href
-          })
-          history.innerHTML +=
-            `<div class="bg-white rounded-full px-8 py-2 text-sm">Navigating to <b>${link.href.slice(0, 30)}</b>...</div>`
         });
       });
-
-      // buttons and onn-click elements
-      iframeDoc.querySelectorAll('button').forEach(button => {
-        button.addEventListener('click', function(event) {
-          event.preventDefault();
-          const selector = generateXPath(button);
-          const text = button.innerText || selector
-
-          setLoading(true);
-          socket.emit("req-click", {
-            selector
-          });
-          histories.push({
-            "action": "click",
-            "selector": selector
-          })
-          history.innerHTML +=
-            `<div class="bg-white rounded-full px-8 py-2 text-sm">Clicking on <b>${text.slice(0, 10)}</b>...</div>`
-        });
-      });
-
-      iframeDoc.querySelectorAll('[onclick]').forEach(element => {
-        element.addEventListener('click', function(event) {
-          event.preventDefault();
-          const selector = generateXPath(element);
-          const text = element.innerText || selector
-
-          setLoading(true);
-          socket.emit("req-click", {
-            selector
-          });
-          histories.push({
-            "action": "click",
-            "selector": selector
-          })
-          history.innerHTML +=
-            `<div class="bg-white rounded-full px-8 py-2 text-sm">Clicking on <b>${text.slice(0, 10)}</b>...</div>`
-
-        });
-      });
-
-      const handleInput = debounce((selector, value) => {
-        setLoading(true);
-        socket.emit("req-input", {
-          selector,
-          value
-        });
-        histories.push({
-          "action": "input",
-          "selector": selector,
-          "value": value
-        })
-        history.innerHTML +=
-          `<div class="bg-white rounded-full px-8 py-2 text-sm">Inputting <b>${value.slice(0, 30)}</b>...</div>`
-      }, 1000);
-
-      // input
-      // NOTE: for input elements, we'll send the value to the server if it's a text input
-      iframeDoc.querySelectorAll('input').forEach(input => {
-        // prevent focus evt listener for type search for wikipedia
-        if (input.type === 'search') {
-          input.addEventListener('focus', (event) => {
-            event.stopImmediatePropagation();
-          }, true);
-        }
-
-        input.addEventListener('input', function(event) {
-          event.preventDefault();
-          const selector = generateXPath(input);
-          const value = input.value;
-
-          handleInput(selector, value)
-        });
-      });
-
-      iframeDoc.querySelectorAll('[type="submit"]').forEach(element => {
-        element.addEventListener('click', function(event) {
-          event.preventDefault();
-          const selector = generateXPath(element);
-          const text = element.innerText || selector
-
-          setLoading(true);
-          socket.emit("req-click", {
-            selector
-          });
-          histories.push({
-            "action": "click",
-            "selector": selector
-          })
-          history.innerHTML +=
-            `<div class="bg-white rounded-full px-8 py-2 text-sm">Submitting on <b>${text.slice(0, 10)}</b>...</div>`
-
-        });
-      });
-
-      // forms
-      iframeDoc.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', function(event) {
-          event.preventDefault();
-          event.stopPropagation();
-        })
-      })
     }
 
-    function generateXPath(element) {
-      if (!element) return;
+    function highlightElement(element) {
+      console.log('Element clicked:', element);
 
-      const parts = [];
+      document.querySelectorAll('.highlight').forEach(item => item.classList.remove('highlight'));
+      element.classList.add('highlight');
 
-      while (element) {
-        let part = element.nodeName.toLowerCase();
-
-        if (element.id) {
-          part += `[@id="${element.id}"]`;
-          parts.unshift(part);
-          break;
-        } else {
-          const siblings = Array.from(element.parentNode.children);
-          const sameTagSiblings = siblings.filter(sibling => sibling.nodeName.toLowerCase() === part);
-
-          if (sameTagSiblings.length > 1) {
-            const index = sameTagSiblings.indexOf(element) + 1;
-            part += `[${index}]`;
-          }
-
-          parts.unshift(part);
-          element = element.parentElement;
-        }
-      }
-
-      return parts.join('/');
+      console.log('Highlighted element class name:', element.className);
     }
   </script>
 </body>
