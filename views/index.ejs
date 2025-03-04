@@ -81,6 +81,29 @@
 
     toastr.options.timeOut = 5000;
 
+    document.addEventListener("DOMContentLoaded", function () {
+    const params = new URLSearchParams(window.location.search);
+    const urlParam = params.get("url"); // Get the `url` query parameter
+    console.log("URL parameter:", urlParam);
+    if (urlParam) {
+      // Validate the URL
+      const urlRegex =
+        /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/;
+  
+      if (!urlParam.match(urlRegex)) {
+        console.error("Invalid URL in parameter");
+      } else {
+        // Update input field
+        urlInput.value = urlParam;
+        urlInput.disabled = true;
+        setLoading(true);
+        socket.emit("req-html", {
+        url: urlParam
+      });
+      }
+    }
+  });
+
     socket.on("res-html", (res) => {
       setLoading(false);
       const html = res.html;
