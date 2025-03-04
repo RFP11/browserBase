@@ -65,7 +65,7 @@
     const histories = []
     const socket = io("http://localhost:3000", {
       auth: {
-        apiKey: '1|ekx1KXvkGy6uGYTmii5v6oabgb40mtmk4lDPXlIa4c2e119f'
+        apiKey: '16|JOfgrDMFNnsVhy4C0aDxpj3cjP4kXbe5MnmcVSbSe3b57679'
       }
     });
 
@@ -160,12 +160,45 @@
     function handleActions() {
       htmlFrame.onload = function () {
         manipulateAction()
+        handleMouseOverText()
       };
 
       if (htmlFrame.contentWindow.document.readyState === 'complete') {
         manipulateAction()
+        handleMouseOverText()
       }
     }
+
+
+    function handleMouseOverText() {
+      const iframeWindow = htmlFrame.contentWindow;
+      const iframeDoc = htmlFrame.contentDocument || iframeWindow?.document;
+
+      if (!iframeDoc) return;
+
+      iframeDoc.addEventListener('mouseover', function (event) {
+        if (!event.target.classList.contains('clicked')) {
+          event.target.style.outline = "2px dashed #06b6d4";
+        }
+      });
+
+      iframeDoc.addEventListener('mouseout', function (event) {
+        if (!event.target.classList.contains('clicked')) {
+          event.target.style.outline = ""; // Remove the outline unless clicked
+        }
+      });
+
+      iframeDoc.addEventListener('click', function (event) {
+        // Remove 'clicked' class from other elements
+        iframeDoc.querySelectorAll('.clicked').forEach(el => {
+          el.classList.remove('clicked');
+        });
+
+        event.target.classList.add('clicked'); // Mark clicked element
+        event.target.style.outline = "2px dashed #06b6d4"; // Keep outline on click
+      });
+    }
+
 
     function manipulateAction() {
       const iframeWindow = htmlFrame.contentWindow;
@@ -183,12 +216,20 @@
     }
 
     function highlightElement(element) {
+      console.log('Element clicked:', element);
+
+      document.querySelectorAll('.highlight').forEach(item => item.classList.remove('highlight'));
+      element.classList.add('highlight');
+      element.style.outline = '2px dashed #06b6d4';
+      element.style.cursor = "pointer";
+
+      console.log('Highlighted element class name:', element.className);
+    }
       const clickedClassName = element.className;
       console.log(clickedClassName)
       const textInput = document.getElementById('selectorElement');
 
       textInput.value = `${clickedClassName}`;
-    }
 
     htmlFrame.onload = function () {
       const iframeWindow = htmlFrame.contentWindow;
